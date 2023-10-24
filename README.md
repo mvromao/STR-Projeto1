@@ -6,4 +6,4 @@ Ficheiros:
 
 [my_interaction_functions.cpp](https://github.com/mvromao/STR-Projeto1/blob/main/my_interaction_functions/my_interaction_functions.cpp)
 
-[labwork.cpp](https://github.com/mvromao/STR-Projeto1/blob/main/labwork1/labwork1.cpp)
+[labwork1.cpp](https://github.com/mvromao/STR-Projeto1/blob/main/labwork1/labwork1.cpp)
