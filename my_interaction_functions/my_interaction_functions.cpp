@@ -68,6 +68,7 @@ void gotoCylinderStart(int pos) { // Moves the cylinder into a position
     else {                        // pos = 0, back
         moveCylinderStartBack();
         while (getCylinderStartPos() != 0) {}
+        //printf("test3");            //DEBUG
     }
     stopCylinderStart();
     return;
@@ -100,9 +101,9 @@ void stopCylinder1() {
 }
 int getCylinder1Pos() {
     uInt8 p0 = readDigitalU8(0);
-    if (getBitValue(p0, 4))
+    if (!getBitValue(p0, 4))
         return 0;
-    if (getBitValue(p0, 3))
+    if (!getBitValue(p0, 3))
         return 1;
     return -1;
 }
@@ -145,9 +146,9 @@ void stopCylinder2() {
 }
 int getCylinder2Pos() {
     uInt8 p0 = readDigitalU8(0);
-    if (getBitValue(p0, 2))
+    if (!getBitValue(p0, 2))
         return 0;
-    if (getBitValue(p0, 1))
+    if (!getBitValue(p0, 1))
         return 1;
     return -1;
 }
@@ -165,17 +166,33 @@ void gotoCylinder2(int pos) { // Moves the cylinder into a position
 }
 
 // Conveyor
-void ConveyorON() {
+void conveyorON() {
     taskENTER_CRITICAL();
-    uInt8 p = readDigitalU8(2);
-    setBitValue(&p, 2, 1); // set bit 1 to high level
-    writeDigitalU8(2, p); // update port 2
+    uInt8 p2 = readDigitalU8(2);
+    setBitValue(&p2, 2, 1); // set bit 1 to high level
+    writeDigitalU8(2, p2); // update port 2
     taskEXIT_CRITICAL();
 }
-void ConveyorOFF() {
+void conveyorOFF() {
     taskENTER_CRITICAL();
     uInt8 p = readDigitalU8(2);
     setBitValue(&p, 2, 0); // set bit 0 to high level
     writeDigitalU8(2, p); // update port 2
     taskEXIT_CRITICAL();
+}
+
+// Start Sensors
+int readSensor1() {
+    uInt8 p1 = readDigitalU8(1);
+    if (getBitValue(p1, 6))
+        return 1;
+    else
+        return 0;
+}
+int readSensor2() {
+    uInt8 p1 = readDigitalU8(1);
+    if (getBitValue(p1, 5))
+        return 1;
+    else
+        return 0;
 }

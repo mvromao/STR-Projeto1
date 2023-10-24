@@ -7,8 +7,8 @@ extern "C" {
 int getBitValue(uInt8 value, uInt8 bit_n);
 void setBitValue(uInt8* variable, int n_bit, int new_value_bit);
 
-// CylinderStart related functions
-// 
+// CylinderStart related functions -----------
+
 // Moves the Start Cylinder to the FRONT position
 void moveCylinderStartFront();
 // Moves the Start Cylinder to the BACK position
@@ -27,7 +27,7 @@ int  getCylinderStartPos();
 // 1 - FRONT
 void gotoCylinderStart(int pos);
 
-// Cylinder1 related functions
+// Cylinder1 related functions -----------
 
 // Moves the Cylinder 1 to the FRONT position
 void moveCylinder1Front();
@@ -47,7 +47,7 @@ int  getCylinder1Pos();
 // 1 - FRONT
 void gotoCylinder1(int pos);
 
-// Cylinder2 related functions
+// Cylinder2 related functions -----------
 
 // Moves the Cylinder 2 to the FRONT position
 void moveCylinder2Front();
@@ -67,4 +67,24 @@ int  getCylinder2Pos();
 // 1 - FRONT
 void gotoCylinder2(int pos);
 
-// Put here the other function headers!!!
+// Conveyor Functions -----------
+
+// Turns the Conveyor On
+void conveyorON();
+// Turns the Conveyor Off
+void conveyorOFF();
+
+
+// Start Sensors' Functions -----------
+
+// Reads the Sensor 1
+// Returns:
+// 1 - Active Sensor 
+// 0 - Inactive Sensor
+int readSensor1();
+
+// Reads the Sensor 2
+// Returns:
+// 1 - Active Sensor 
+// 0 - Inactive Sensor
+int readSensor2();

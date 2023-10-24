@@ -1,11 +1,13 @@
 // labwork1.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
 
+#include <iostream>
 #include<conio.h>
 #include<stdlib.h>
 #include <windows.h> //for Sleep function
 #include <stdio.h>
-#include <C:\Users\Renedito\Documents\str\my_interaction_functions\my_interaction_functions.h>
+// #include <C:\Users\Renedito\Documents\str\my_interaction_functions\my_interaction_functions.h> Change depending on the computer
+#include <D:\Documents\str\STR-Projeto1\my_interaction_functions\my_interaction_functions.h>
 
 extern "C" {
 	#include <FreeRTOS.h>
@@ -87,10 +89,9 @@ TaskHandle_t taskCylinder1;
 TaskHandle_t taskCylinder2;
 TaskHandle_t taskCalibration;
 TaskHandle_t taskMenu;
-TaskHandle_t;
-TaskHandle_t;
-TaskHandle_t;
-TaskHandle_t;
+TaskHandle_t taskEnterPackage;
+TaskHandle_t taskCheckPackage;
+//TaskHandle_t ;
 
 // Semaphores
 xSemaphoreHandle xSemCylinderStart_start;
@@ -100,20 +101,37 @@ xSemaphoreHandle xSemCylinderStart_finished;
 xSemaphoreHandle xSemCylinder1_finished;
 xSemaphoreHandle xSemCylinder2_finished;
 xSemaphoreHandle xSem_conveyor;
+xSemaphoreHandle xSemCheckPackageStart;
+xSemaphoreHandle xSemCheckPackageFinished;
 
 //Mailboxes
 xQueueHandle mbx_CS;
 xQueueHandle mbx_C1;
 xQueueHandle mbx_C2;
+xQueueHandle mbx_EntryQueue;
+xQueueHandle mbx_CheckPackage;
 
+// Brick Structure
+typedef struct {
+	int type; // Tipo do tijolo
+	time_t entryDate; // Data/hora em que o tijolo foi inserido
+} brick;
+
+// Parameters for the Check Package function
+typedef struct taskCheckPackageParams {
+	xQueueHandle mbx_check_package;
+	xSemaphoreHandle sem_check_package_start;
+} TaskCheckPackageParam;
 
 // Cylinder Tasks
 void vTaskCylinderStart(void* pvParameters) {
 	while (TRUE) {
 		xQueueSemaphoreTake(xSemCylinderStart_start, portMAX_DELAY);
 		gotoCylinderStart(1);
-		xSemaphoreGive(xSemCylinderStart_finished, portMAX_DELAY);
+		xSemaphoreGive(xSemCylinderStart_finished);
+		//printf("test");										// DEBUG
 		gotoCylinderStart(0);
+		//printf("test2");									// DEBUG
 	}
 
 }
@@ -121,20 +139,84 @@ void vTaskCylinder1(void* pvParameters) {
 	while(TRUE) {
 		xQueueSemaphoreTake(xSemCylinder1_start, portMAX_DELAY);
 		gotoCylinder1(1);
-		xSemaphoreGive(xSemCylinder1_finished, portMAX_DELAY);
+		xSemaphoreGive(xSemCylinder1_finished);
 		gotoCylinder1(0);
 	}
 }
 void vTaskCylinder2(void* pvParameters) {
-	xQueueSemaphoreTake(xSemCylinder2_start, portMAX_DELAY);
-	gotoCylinder2(1);
-	xSemaphoreGive(xSemCylinder2_finished, portMAX_DELAY);
-	gotoCylinder2(0);
+	while (TRUE) {
+		xQueueSemaphoreTake(xSemCylinder2_start, portMAX_DELAY);
+		gotoCylinder2(1);
+		xSemaphoreGive(xSemCylinder2_finished);
+		gotoCylinder2(0);
+	}
+	
 }
+void vTaskEnterPackage(void* pvParameters) {
+	int packageType;
+	while (TRUE) {
+		getchar();
+		xSemaphoreGive(xSemCylinderStart_start);
+		xSemaphoreGive(xSemCheckPackageStart);
+
+		xQueueSemaphoreTake(xSemCylinderStart_finished, portMAX_DELAY);
+		xQueueReceive(mbx_CheckPackage, &packageType, portMAX_DELAY);
+
+		printf("Package of type %d received succesfully", packageType);
+	}
+}
+void vTaskCheckPackage(void* pvParameters) {
+	//int packageType = 1;
+	//int sensor1 = 0, sensor2 = 0;
+
+	/*TaskCheckPackageParam* my_params = (TaskCheckPackageParam*)(pvParameters);
+	xQueueHandle mbx_check_package = my_params->mbx_check_package;
+	xSemaphoreHandle sem_check_package_start = my_params->sem_check_package_start;
+	*/
+
+	while (TRUE) {
+		int packageType = 1;
+		int sensor1 = 0, sensor2 = 0;
+
+		xQueueSemaphoreTake(xSemCheckPackageStart, portMAX_DELAY);
+
+		while (getCylinderStartPos() != 1) {
+			
+//			printf("a%d sensor1 %d sensor2 %d\n", packageType, sensor1, sensor2);
+			if (readSensor1() && !sensor1) {
+				packageType++;
+				sensor1++;
+				printf("Sensor1 Read\n");								//DEBUG
+			}
+			if (readSensor2() && !sensor2) {
+				packageType++;
+				sensor2++;
+				printf("Sensor2 Read\n");								//DEBUG
+			}
+		}
+		//printf("b%d\n", packageType);
+		xQueueSend(mbx_CheckPackage, &packageType, portMAX_DELAY);
+	}
+}
+void vTaskStorePackage(void* pvParameters) {
+	char* ArriveTime;
+	brick packageBuffer;
+	char cmd;
+	while (TRUE) {
+		xQueueReceive(mbx_EntryQueue, &cmd, portMAX_DELAY);
+		int num = cmd - '0';
+		packageBuffer.type = num;
+		packageBuffer.entryDate = time(NULL);
+		ArriveTime = ctime(&(packageBuffer.entryDate));
+		printf("\nSaid Inserted Type: %d\n", packageBuffer.type);
+		printf("\nInsert Time: %s\n", ArriveTime);
+	}
+}
+
+// To-do Menu and Calibration
 void vTaskMenu(void* pvParameters) {
 
 }
-
 void vTaskCalibration(void* pvParameters) {
 
 }
@@ -147,6 +229,25 @@ void inicializarPortos() {
 	createDigitalOutput(2);
 }
 void myDaemonTaskStartupHook(void) {
+
+	// Semaphores
+	xSemCylinderStart_start = xSemaphoreCreateCounting(1000, 0);
+	xSemCylinder1_start = xSemaphoreCreateCounting(1000, 0);
+	xSemCylinder2_start = xSemaphoreCreateCounting(1000, 0);
+	xSemCylinderStart_finished = xSemaphoreCreateCounting(1000, 0);
+	xSemCylinder1_finished = xSemaphoreCreateCounting(1000, 0);
+	xSemCylinder2_finished = xSemaphoreCreateCounting(1000, 0);
+	xSem_conveyor = xSemaphoreCreateCounting(1000, 0);
+	xSemCheckPackageStart = xSemaphoreCreateCounting(1000, 0);
+	xSemCheckPackageFinished = xSemaphoreCreateCounting(1000, 0);
+
+	// Mailboxes
+	mbx_CS = xQueueCreate(10, sizeof(int));
+	mbx_C1 = xQueueCreate(10, sizeof(int));
+	mbx_C2 = xQueueCreate(10, sizeof(int));
+	mbx_EntryQueue = xQueueCreate(10, sizeof(int));
+	mbx_CheckPackage = xQueueCreate(10, sizeof(int));
+
 	inicializarPortos();
 
 	xSemaphore = xSemaphoreCreateCounting(10, 0);
@@ -156,15 +257,19 @@ void myDaemonTaskStartupHook(void) {
 	xTaskCreate(vTaskCylinder1, "vTaskCylinder1", 100, NULL, 0, &taskCylinder2);
 	xTaskCreate(vTaskMenu, "vTaskMenu", 100, NULL, 0, &taskMenu);
 	xTaskCreate(vTaskCalibration, "vTaskCalibration", 100, NULL, 0, &taskCalibration);
+	xTaskCreate(vTaskEnterPackage, "vTaskEnterPackage", 100, NULL, 0, &taskEnterPackage);
+	xTaskCreate(vTaskCheckPackage, "vTaskCheckPackage", 100, NULL, 0, &taskCheckPackage);
+	
 }
 
 int main()
 {
-	inicializarPortos();
+
 	initialiseHeap();
 	vApplicationDaemonTaskStartupHook = &myDaemonTaskStartupHook;
 	vTaskStartScheduler();
 
+	// Obsolete code but won't delete now
 	printf("\nCalibrate kit manually and press enter...");
 	int tecla = 0;
 	moveCylinderStartFront();
@@ -190,7 +295,7 @@ int main()
 			printf("Vai mover Cylinder2 back");
 		}
 			
-		// to complete...
+		// To complete...
 	}
 	closeChannels();
 		return 0;

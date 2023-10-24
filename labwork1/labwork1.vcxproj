@@ -74,9 +74,9 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\Renedito\Documents\str\include;C:\Users\Renedito\Documents\str\freeRTOS\include;C:\Users\Renedito\Documents\str\freeRTOS</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\Documents\str\STR-Projeto1\freeRTOS\include;D:\Documents\str\STR-Projeto1\include;D:\Documents\str\STR-Projeto1\freeRTOS</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -134,13 +134,16 @@
     <ClCompile Include="..\source\interface.c" />
     <ClCompile Include="..\source\mongoose.c" />
     <ClCompile Include="..\source\sim_server.c" />
-    <ClCompile Include="labwork1.cpp" />
+    <ClCompile Include="labwork1.cpp">
+      <AdditionalIncludeDirectories Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">D:\Documents\str\STR-Projeto1\include;D:\Documents\str\STR-Projeto1\freeRTOS\include;D:\Documents\str\STR-Projeto1\freeRTOS;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\lib\freeRTOS.lib" />
     <Library Include="..\lib\NIDAQmx.lib" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\include\interface.h" />
     <ClInclude Include="..\my_interaction_functions\my_interaction_functions.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

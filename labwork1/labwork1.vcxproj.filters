@@ -39,5 +39,8 @@
     <ClInclude Include="..\my_interaction_functions\my_interaction_functions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\include\interface.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
