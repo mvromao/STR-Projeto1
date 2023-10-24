@@ -1,0 +1,18 @@
+﻿  my_interaction_functions.cpp
+  labwork1.cpp
+C:\Users\Renedito\Documents\STR\labwork1\labwork1.cpp(52,4): error C4235: nonstandard extension used: '__asm' keyword not supported on this architecture
+C:\Users\Renedito\Documents\STR\labwork1\labwork1.cpp(52,12): error C2065: 'NOP': undeclared identifier
+C:\Users\Renedito\Documents\STR\labwork1\labwork1.cpp(52,16): error C2143: syntax error: missing ';' before '}'
+C:\Users\Renedito\Documents\STR\labwork1\labwork1.cpp(53,4): error C4235: nonstandard extension used: '__asm' keyword not supported on this architecture
+C:\Users\Renedito\Documents\STR\labwork1\labwork1.cpp(53,12): error C2065: 'NOP': undeclared identifier
+C:\Users\Renedito\Documents\STR\labwork1\labwork1.cpp(53,16): error C2143: syntax error: missing ';' before '}'
+C:\Users\Renedito\Documents\STR\labwork1\labwork1.cpp(88,13): warning C4091: '': ignored on left of 'tskTaskControlBlock *' when no variable is declared
+C:\Users\Renedito\Documents\STR\labwork1\labwork1.cpp(89,13): warning C4091: '': ignored on left of 'tskTaskControlBlock *' when no variable is declared
+C:\Users\Renedito\Documents\STR\labwork1\labwork1.cpp(90,13): warning C4091: '': ignored on left of 'tskTaskControlBlock *' when no variable is declared
+C:\Users\Renedito\Documents\STR\labwork1\labwork1.cpp(91,13): warning C4091: '': ignored on left of 'tskTaskControlBlock *' when no variable is declared
+C:\Users\Renedito\Documents\STR\labwork1\labwork1.cpp(92,13): warning C4091: '': ignored on left of 'tskTaskControlBlock *' when no variable is declared
+C:\Users\Renedito\Documents\STR\labwork1\labwork1.cpp(93,13): warning C4091: '': ignored on left of 'tskTaskControlBlock *' when no variable is declared
+C:\Users\Renedito\Documents\STR\labwork1\labwork1.cpp(115,3): warning C4002: too many arguments for function-like macro invocation 'xSemaphoreGive'
+C:\Users\Renedito\Documents\STR\labwork1\labwork1.cpp(124,3): warning C4002: too many arguments for function-like macro invocation 'xSemaphoreGive'
+C:\Users\Renedito\Documents\STR\labwork1\labwork1.cpp(131,2): warning C4002: too many arguments for function-like macro invocation 'xSemaphoreGive'
+  Generating Code...
