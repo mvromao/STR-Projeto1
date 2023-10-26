@@ -1,8 +1,9 @@
 {
   "ExpandedNodes": [
     "",
-    "\\labwork1"
+    "\\labwork1",
+    "\\my_interaction_functions"
   ],
-  "SelectedNode": "\\labwork1\\labwork1.cpp",
+  "SelectedNode": "\\my_interaction_functions\\my_interaction_functions.h",
   "PreviewInSolutionExplorer": false
 }

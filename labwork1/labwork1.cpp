@@ -6,8 +6,8 @@
 #include<stdlib.h>
 #include <windows.h> //for Sleep function
 #include <stdio.h>
-#include <C:\Users\Renedito\Documents\str\my_interaction_functions\my_interaction_functions.h> Change depending on the computer
-// #include <D:\Documents\str\STR-Projeto1\my_interaction_functions\my_interaction_functions.h>
+//#include <C:\Users\Renedito\Documents\str\my_interaction_functions\my_interaction_functions.h> Change depending on the computer
+#include <D:\Documents\str\STR-Projeto1\my_interaction_functions\my_interaction_functions.h>
 
 extern "C" {
 #include <FreeRTOS.h>
@@ -24,11 +24,14 @@ xSemaphoreHandle xSemaphore;
 #define mainREGION_2_SIZE   29905
 #define mainREGION_3_SIZE   7607
 
+#define SleepTime 20
+
 // Initializations
 void vAssertCalled(unsigned long ulLine, const char* const pcFileName);
 static void initialiseHeap(void);
 void inicializarPortos();
 void myDaemonTaskStartupHook(void);
+
 
 // Given Functions
 void vAssertCalled(unsigned long ulLine, const char* const pcFileName)
@@ -82,7 +85,6 @@ static void initialiseHeap(void)
 	vPortDefineHeapRegions(xHeapRegions);
 }
 
-
 // Tasks
 TaskHandle_t taskCylinderStart;
 TaskHandle_t taskCylinder1;
@@ -93,9 +95,12 @@ TaskHandle_t taskEnterPackage;
 TaskHandle_t taskCheckPackage;
 TaskHandle_t taskEmergency;
 TaskHandle_t taskResume;
-// TaskHandle_t ;
+TaskHandle_t taskLED;
 
-
+TaskHandle_t goto_CS_task;
+TaskHandle_t goto_C1_task;
+TaskHandle_t goto_C2_task;
+TaskHandle_t conveyor_task;
 
 // Semaphores
 xSemaphoreHandle xSemCylinderStart_start;
@@ -107,6 +112,11 @@ xSemaphoreHandle xSemCylinder2_finished;
 xSemaphoreHandle xSem_conveyor;
 xSemaphoreHandle xSemCheckPackageStart;
 xSemaphoreHandle xSemCheckPackageFinished;
+
+xSemaphoreHandle xSemToggleCylinderStart;
+xSemaphoreHandle xSemToggleCylinder1;
+xSemaphoreHandle xSemToggleCylinder2;
+xSemaphoreHandle xSemToggleConveyor;
 
 //Mailboxes
 xQueueHandle mbx_CS;
@@ -121,6 +131,14 @@ typedef struct {
 	time_t entryDate; // Data/hora em que o tijolo foi inserido
 } brick;
 
+struct MovingPartsControl {
+	int stop = 0;
+	int CylinderStart = 0;
+	int Cylinder1 = 0;
+	int Cylinder2 = 0;
+	int Conveyor = 0;
+} MovingParts;
+
 // Parameters for the Check Package function
 typedef struct taskCheckPackageParams {
 	xQueueHandle mbx_check_package;
@@ -131,36 +149,46 @@ typedef struct taskCheckPackageParams {
 void vTaskCylinderStart(void* pvParameters) {
 	while (TRUE) {
 		xQueueSemaphoreTake(xSemCylinderStart_start, portMAX_DELAY);
+		MovingParts.CylinderStart = 1;
 		gotoCylinderStart(1);
+		
 		xSemaphoreGive(xSemCylinderStart_finished);
-		//printf("test");										// DEBUG
+		MovingParts.CylinderStart = 0;
 		gotoCylinderStart(0);
-		//printf("test2");									// DEBUG
 	}
-
 }
 void vTaskCylinder1(void* pvParameters) {
 	while (TRUE) {
 		xQueueSemaphoreTake(xSemCylinder1_start, portMAX_DELAY);
+		MovingParts.Cylinder1 = 1;
 		gotoCylinder1(1);
+
 		xSemaphoreGive(xSemCylinder1_finished);
+		MovingParts.Cylinder1 = 0;
 		gotoCylinder1(0);
 	}
 }
 void vTaskCylinder2(void* pvParameters) {
 	while (TRUE) {
 		xQueueSemaphoreTake(xSemCylinder2_start, portMAX_DELAY);
+		MovingParts.Cylinder2 = 1;
 		gotoCylinder2(1);
+
 		xSemaphoreGive(xSemCylinder2_finished);
+		MovingParts.Cylinder2 = 0;
 		gotoCylinder2(0);
 	}
 
 }
+
 void vTaskEnterPackage(void* pvParameters) {
 	int packageType;
 	while (TRUE) {
-		getchar();
+		while (getchar() != '\n');
 		xSemaphoreGive(xSemCylinderStart_start);
+		xSemaphoreGive(xSemCylinder1_start);
+		xSemaphoreGive(xSemCylinder2_start);
+
 		xSemaphoreGive(xSemCheckPackageStart);
 
 		xQueueSemaphoreTake(xSemCylinderStart_finished, portMAX_DELAY);
@@ -226,21 +254,31 @@ void vTaskCalibration(void* pvParameters) {
 }
 
 // Emergency Tasks
-
 void vTaskEmergency(void* pvParameters) {
 
 	// The task being suspended and resumed.
-	while(TRUE) {
+	while (TRUE) {
 		// The task suspends itself.
 		vTaskSuspend(NULL);
 		// The task is now suspended, so will not reach here until the ISR resumes it.
 		printf("\n **** EMERGENCY task\n");
 		// The task suspends all other tasks.
-		stopCylinderStart();
-		stopCylinder1();
-		stopCylinder2();
+
+		MovingParts.stop = 1;
+
+		Sleep(SleepTime);
+		xSemaphoreGive(xSemToggleCylinderStart);
+		Sleep(SleepTime);
+		xSemaphoreGive(xSemToggleCylinder1);
+		Sleep(SleepTime);
+		xSemaphoreGive(xSemToggleCylinder2);
+//		Sleep(SleepTime);
+//		xSemaphoreGive(xSemToggleConveyor);
 
 		vTaskSuspend(taskCylinderStart);
+		vTaskSuspend(taskCylinder1);
+		vTaskSuspend(taskCylinder2);
+		vTaskResume(taskLED);
 	}
 }
 void vTaskResume(void* pvParameters) {
@@ -249,9 +287,29 @@ void vTaskResume(void* pvParameters) {
 		// The task suspends itself.
 		vTaskSuspend(NULL);
 		// The task is now suspended, so will not reach here until the ISR resumes it.
-			printf("\n **** RESUME task\n");
-		// The task suspends task sender.
+		printf("\n **** RESUME task\n");
+
+		MovingParts.stop = 0;
+		Sleep(SleepTime);
+		xSemaphoreGive(xSemToggleCylinderStart);
+		Sleep(SleepTime);
+		xSemaphoreGive(xSemToggleCylinder1);
+		Sleep(SleepTime);
+		xSemaphoreGive(xSemToggleCylinder2);
+//		Sleep(SleepTime);
+//		xSemaphoreGive(xSemToggleConveyor);
+		printf("%d\n", getLEDState());
+		vTaskSuspend(taskLED);
+		Sleep(15);
+		if (getLEDState())
+			toggleLED();
+
+		printf("%d\n", getLEDState());
+
 		vTaskResume(taskCylinderStart);
+		vTaskResume(taskCylinder1);
+		vTaskResume(taskCylinder2);
+		
 	}
 }
 void switch1_rising_isr(ULONGLONG lastTime) {
@@ -261,9 +319,10 @@ void switch1_rising_isr(ULONGLONG lastTime) {
 	printf("\nSwitch one RISING detected at time = %llu...\n", time);
 	BaseType_t xYieldRequired;
 	// Resume the suspended task.
+
+
 	xYieldRequired = xTaskResumeFromISR(taskEmergency);
 }
-
 void switch2_rising_isr(ULONGLONG lastTime) {
 	ULONGLONG time = GetTickCount64();
 	printf("\nSwitch two RISING detected at time = %llu...", time);
@@ -271,6 +330,66 @@ void switch2_rising_isr(ULONGLONG lastTime) {
 	// Resume the suspended task.
 	xYieldRequired = xTaskResumeFromISR(taskResume);
 }
+
+// LED
+void vtaskLED(void* pvParameters) {
+	while (TRUE) {
+		if (MovingParts.stop) {
+			toggleLED();
+			vTaskDelay(500);
+		}
+	}
+}
+
+// Go-to
+void vgoto_CS_task(void* pvParameters)
+{
+	while (TRUE)
+	{
+		xQueueSemaphoreTake(xSemToggleCylinderStart, portMAX_DELAY);
+		if (MovingParts.stop) {
+			stopCylinderStart();
+		}
+		else {
+			gotoCylinderStart(MovingParts.CylinderStart);
+		}
+	}
+}
+void vgoto_C1_task(void* pvParameters)
+{
+	while (TRUE)
+	{
+		xQueueSemaphoreTake(xSemToggleCylinder1, portMAX_DELAY);
+		if (MovingParts.stop) {
+			stopCylinder1();
+		}
+		else {
+			gotoCylinder1(MovingParts.Cylinder1);
+		}
+	}
+}
+void vgoto_C2_task(void* pvParameters)
+{
+	while (TRUE)
+	{
+		xQueueSemaphoreTake(xSemToggleCylinder2, portMAX_DELAY);
+		if (MovingParts.stop) {
+			stopCylinder2();
+		}
+		else {
+			gotoCylinder2(MovingParts.Cylinder2);
+		}
+	}
+}
+void vconveyor_task(void* pvParameters)
+{
+	while (TRUE)
+	{
+		xQueueSemaphoreTake(xSemToggleConveyor, portMAX_DELAY);
+		//gotoCylinderStart(MovingParts.Conveyor);
+	}
+}
+
 void inicializarPortos() {
 	// INPUT PORTS
 	createDigitalInput(0);
@@ -290,6 +409,11 @@ void myDaemonTaskStartupHook(void) {
 	xSem_conveyor = xSemaphoreCreateCounting(1000, 0);
 	xSemCheckPackageStart = xSemaphoreCreateCounting(1000, 0);
 	xSemCheckPackageFinished = xSemaphoreCreateCounting(1000, 0);
+
+	xSemToggleCylinderStart = xSemaphoreCreateCounting(1000, 0);
+	xSemToggleCylinder1 = xSemaphoreCreateCounting(1000, 0);
+	xSemToggleCylinder2 = xSemaphoreCreateCounting(1000, 0);
+	xSemToggleConveyor = xSemaphoreCreateCounting(1000, 0);
 
 	// Mailboxes
 	mbx_CS = xQueueCreate(10, sizeof(int));
@@ -311,6 +435,15 @@ void myDaemonTaskStartupHook(void) {
 	xTaskCreate(vTaskCheckPackage, "vTaskCheckPackage", 100, NULL, 0, &taskCheckPackage);
 	xTaskCreate(vTaskResume, "vTaskResume", 100, NULL, 0, &taskResume);
 	xTaskCreate(vTaskEmergency, "vTaskEmergency", 100, NULL, 0, &taskEmergency);
+
+	xTaskCreate(vgoto_CS_task, "vgoto_CS_task", 100, NULL, 0, &goto_CS_task);
+	xTaskCreate(vgoto_C1_task, "vgoto_C1_task", 100, NULL, 0, &goto_C1_task);
+	xTaskCreate(vgoto_C2_task, "vgoto_C2_task", 100, NULL, 0, &goto_C2_task);
+	xTaskCreate(vconveyor_task, "vconveyor_task", 100, NULL, 0, &conveyor_task);
+	xTaskCreate(vtaskLED, "vtaskLED", 100, NULL, 0, &taskLED);
+
+
+
 
 	attachInterrupt(1, 4, switch1_rising_isr, RISING);
 	attachInterrupt(1, 3, switch2_rising_isr, RISING);
@@ -365,13 +498,3 @@ void setBitValue(uInt8* variable, int n_bit, int new_value_bit)
 	else *variable &= mask_off;
 }
 
-// Run program: Ctrl + F5 or Debug > Start Without Debugging menu
-// Debug program: F5 or Debug > Start Debugging menu
-
-// Tips for Getting Started: 
-//   1. Use the Solution Explorer window to add/manage files
-//   2. Use the Team Explorer window to connect to source control
-//   3. Use the Output window to see build output and other messages
-//   4. Use the Error List window to view errors
-//   5. Go to Project > Add New Item to create new code files, or Project > Add Existing Item to add existing code files to the project
-//   6. In the future, to open this project again, go to File > Open > Project and select the .sln file

@@ -69,10 +69,8 @@ void gotoCylinder2(int pos);
 
 // Conveyor Functions -----------
 
-// Turns the Conveyor On
-void conveyorON();
-// Turns the Conveyor Off
-void conveyorOFF();
+// Toggles the Conveyor ON or OFF
+void toggleConveyor();
 
 
 // Start Sensors' Functions -----------
@@ -88,3 +86,11 @@ int readSensor1();
 // 1 - Active Sensor 
 // 0 - Inactive Sensor
 int readSensor2();
+
+// LED Functions
+
+// Toggles the LED ON and OFF
+void toggleLED();
+
+// Returns the LED state
+int getLEDState();
