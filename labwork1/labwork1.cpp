@@ -6,16 +6,16 @@
 #include<stdlib.h>
 #include <windows.h> //for Sleep function
 #include <stdio.h>
-// #include <C:\Users\Renedito\Documents\str\my_interaction_functions\my_interaction_functions.h> Change depending on the computer
-#include <D:\Documents\str\STR-Projeto1\my_interaction_functions\my_interaction_functions.h>
+#include <C:\Users\Renedito\Documents\str\my_interaction_functions\my_interaction_functions.h> Change depending on the computer
+// #include <D:\Documents\str\STR-Projeto1\my_interaction_functions\my_interaction_functions.h>
 
 extern "C" {
-	#include <FreeRTOS.h>
-	#include <task.h>
-	#include <timers.h>
-	#include <semphr.h>
-	#include <interface.h>	
-	#include <interrupts.h>
+#include <FreeRTOS.h>
+#include <task.h>
+#include <timers.h>
+#include <semphr.h>
+#include <interface.h>	
+#include <interrupts.h>
 }
 
 xSemaphoreHandle xSemaphore;
@@ -91,7 +91,11 @@ TaskHandle_t taskCalibration;
 TaskHandle_t taskMenu;
 TaskHandle_t taskEnterPackage;
 TaskHandle_t taskCheckPackage;
-//TaskHandle_t ;
+TaskHandle_t taskEmergency;
+TaskHandle_t taskResume;
+// TaskHandle_t ;
+
+
 
 // Semaphores
 xSemaphoreHandle xSemCylinderStart_start;
@@ -136,7 +140,7 @@ void vTaskCylinderStart(void* pvParameters) {
 
 }
 void vTaskCylinder1(void* pvParameters) {
-	while(TRUE) {
+	while (TRUE) {
 		xQueueSemaphoreTake(xSemCylinder1_start, portMAX_DELAY);
 		gotoCylinder1(1);
 		xSemaphoreGive(xSemCylinder1_finished);
@@ -150,7 +154,7 @@ void vTaskCylinder2(void* pvParameters) {
 		xSemaphoreGive(xSemCylinder2_finished);
 		gotoCylinder2(0);
 	}
-	
+
 }
 void vTaskEnterPackage(void* pvParameters) {
 	int packageType;
@@ -181,8 +185,8 @@ void vTaskCheckPackage(void* pvParameters) {
 		xQueueSemaphoreTake(xSemCheckPackageStart, portMAX_DELAY);
 
 		while (getCylinderStartPos() != 1) {
-			
-//			printf("a%d sensor1 %d sensor2 %d\n", packageType, sensor1, sensor2);
+
+			//			printf("a%d sensor1 %d sensor2 %d\n", packageType, sensor1, sensor2);
 			if (readSensor1() && !sensor1) {
 				packageType++;
 				sensor1++;
@@ -221,6 +225,52 @@ void vTaskCalibration(void* pvParameters) {
 
 }
 
+// Emergency Tasks
+
+void vTaskEmergency(void* pvParameters) {
+
+	// The task being suspended and resumed.
+	while(TRUE) {
+		// The task suspends itself.
+		vTaskSuspend(NULL);
+		// The task is now suspended, so will not reach here until the ISR resumes it.
+		printf("\n **** EMERGENCY task\n");
+		// The task suspends all other tasks.
+		stopCylinderStart();
+		stopCylinder1();
+		stopCylinder2();
+
+		vTaskSuspend(taskCylinderStart);
+	}
+}
+void vTaskResume(void* pvParameters) {
+	// The task being suspended and resumed.
+	while (TRUE) {
+		// The task suspends itself.
+		vTaskSuspend(NULL);
+		// The task is now suspended, so will not reach here until the ISR resumes it.
+			printf("\n **** RESUME task\n");
+		// The task suspends task sender.
+		vTaskResume(taskCylinderStart);
+	}
+}
+void switch1_rising_isr(ULONGLONG lastTime) {
+	// GetTickCount64() current time in miliseconds
+	// since the system has started...
+	ULONGLONG time = GetTickCount64();
+	printf("\nSwitch one RISING detected at time = %llu...\n", time);
+	BaseType_t xYieldRequired;
+	// Resume the suspended task.
+	xYieldRequired = xTaskResumeFromISR(taskEmergency);
+}
+
+void switch2_rising_isr(ULONGLONG lastTime) {
+	ULONGLONG time = GetTickCount64();
+	printf("\nSwitch two RISING detected at time = %llu...", time);
+	BaseType_t xYieldRequired;
+	// Resume the suspended task.
+	xYieldRequired = xTaskResumeFromISR(taskResume);
+}
 void inicializarPortos() {
 	// INPUT PORTS
 	createDigitalInput(0);
@@ -259,7 +309,12 @@ void myDaemonTaskStartupHook(void) {
 	xTaskCreate(vTaskCalibration, "vTaskCalibration", 100, NULL, 0, &taskCalibration);
 	xTaskCreate(vTaskEnterPackage, "vTaskEnterPackage", 100, NULL, 0, &taskEnterPackage);
 	xTaskCreate(vTaskCheckPackage, "vTaskCheckPackage", 100, NULL, 0, &taskCheckPackage);
-	
+	xTaskCreate(vTaskResume, "vTaskResume", 100, NULL, 0, &taskResume);
+	xTaskCreate(vTaskEmergency, "vTaskEmergency", 100, NULL, 0, &taskEmergency);
+
+	attachInterrupt(1, 4, switch1_rising_isr, RISING);
+	attachInterrupt(1, 3, switch2_rising_isr, RISING);
+
 }
 
 int main()
@@ -283,7 +338,7 @@ int main()
 		if (tecla == 'a') {
 			printf("Vai mover CylinderStart back\n");
 			moveCylinderStartBack();
-		}	
+		}
 		if (tecla == 'z') {
 			printf("Parando CylinderStart\n");
 			stopCylinderStart();
@@ -294,11 +349,11 @@ int main()
 		if (tecla == 'x') {
 			printf("Vai mover Cylinder2 back");
 		}
-			
+
 		// To complete...
 	}
 	closeChannels();
-		return 0;
+	return 0;
 }
 
 void setBitValue(uInt8* variable, int n_bit, int new_value_bit)

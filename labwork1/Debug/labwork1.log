@@ -1,2 +1,3 @@
 ﻿  labwork1.cpp
-  labwork1.vcxproj -> D:\Documents\str\STR-Projeto1\labwork1\Debug\labwork1.exe
+C:\Users\Renedito\Documents\STR\labwork1\labwork1.cpp(9,10): warning C4067: unexpected tokens following preprocessor directive - expected a newline
+  labwork1.vcxproj -> C:\Users\Renedito\Documents\str\labwork1\Debug\labwork1.exe
