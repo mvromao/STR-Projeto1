@@ -1,0 +1,4 @@
+﻿  interface.c
+C:\Users\Renedito\Documents\str\labwork2\source\interface.c(300,1): warning C4142: 'closeChannels': benign redefinition of type
+C:\Users\Renedito\Documents\str\include\interface.h(10,6): message : see declaration of 'closeChannels'
+  storage.vcxproj -> C:\Users\Renedito\Documents\str\labwork2\storage\x64\Debug\storage.exe
