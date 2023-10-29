@@ -1,0 +1,3 @@
+﻿  labwork1.cpp
+freeRTOS.lib(main.obj) : warning LNK4099: PDB '' was not found with 'freeRTOS.lib(main.obj)' or at ''; linking object as if no debug info
+  labwork1.vcxproj -> C:\str\labwork1\Debug\labwork1.exe
