@@ -27,5 +27,16 @@
     <ClCompile Include="..\source\sim_server.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\source\storage_lowlevel.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="storage_jni.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\include\storage.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

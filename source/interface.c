@@ -8,10 +8,10 @@
 #include <winsock.h>
 #include <interface.h>		
  
-//#define _USE_REAL_KIT_  
+#define _USE_REAL_KIT_  
 
-//#define MG_HTTP_FOLDER "C:/Users/Renedito/Documents/str/simulators" //Change depending on the computer
-#define MG_HTTP_FOLDER "D:/Documents/str/STR-Projeto1/simulators"
+#define MG_HTTP_FOLDER "C:/Users/Renedito/Documents/str/simulators" //Change depending on the computer
+//#define MG_HTTP_FOLDER "D:/Documents/str/STR-Projeto1/simulators"
 #define  MG_HTTP_PORT   "8081"
 
 

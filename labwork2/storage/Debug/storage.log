@@ -1,0 +1,17 @@
+﻿  interface.c
+C:\Users\Renedito\Documents\str\labwork2\source\interface.c(300,1): warning C4142: 'closeChannels': benign redefinition of type
+C:\Users\Renedito\Documents\str\labwork2\include\interface.h(10,6): message : see declaration of 'closeChannels'
+  mongoose.c
+  sim_server.c
+  storage_lowlevel.c
+  storage_jni.c
+  Generating Code...
+C:\Users\Renedito\Documents\str\labwork2\storage\storage_jni.c(51): warning C4716: 'Java_Storage_getXPos': must return a value
+C:\Users\Renedito\Documents\str\labwork2\storage\storage_jni.c(131): warning C4716: 'Java_Storage_getYPos': must return a value
+C:\Users\Renedito\Documents\str\labwork2\storage\storage_jni.c(91): warning C4716: 'Java_Storage_getZPos': must return a value
+C:\Users\Renedito\Documents\str\labwork2\storage\storage_jni.c(151): warning C4716: 'Java_Storage_getSwitch2': must return a value
+C:\Users\Renedito\Documents\str\labwork2\storage\storage_jni.c(161): warning C4716: 'Java_Storage_getSwitch1_12': must return a value
+C:\Users\Renedito\Documents\str\labwork2\storage\storage_jni.c(141): warning C4716: 'Java_Storage_getSwitch1': must return a value
+  storage.cpp
+     Creating library C:\Users\Renedito\Documents\str\labwork2\storage\Debug\storage.lib and object C:\Users\Renedito\Documents\str\labwork2\storage\Debug\storage.exp
+  storage.vcxproj -> C:\Users\Renedito\Documents\str\labwork2\storage\Debug\storage.dll
